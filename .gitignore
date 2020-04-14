@@ -1,0 +1,14 @@
+.DS_Store
+.vscode/
+*/.gradle/
+.gradle/
+.settings/
+build/
+*/experiment.properties
+bin
+*/output.txt
+*.csv
+*.txt
+*.class
+.project
+.classpath
