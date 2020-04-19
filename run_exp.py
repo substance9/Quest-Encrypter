@@ -58,9 +58,9 @@ def init_db(project_run_id):
     print("Initiate DB for Quest Encrypter ")
     call_cmd(["./init_quest_postgres.sh",str(DB_PORT)])
 
-def runexp(duration,experiment_id,enc_key,secret,enc_table_name,input_path,output_path):
-    project_run_id = PROJECT_NAME_BASE + str(duration)
-    init_db(project_run_id)
+def runexp(duration,experiment_id,enc_key,secret,enc_table_name,input_path,max_rows,output_path):
+    #project_run_id = PROJECT_NAME_BASE + str(duration) + "_" + str(max_rows)
+    init_db(enc_table_name)
 
     os.chdir(PROJECT_DIR_PATH)
     subprocess.call(["gradle","clean"])
@@ -69,7 +69,7 @@ def runexp(duration,experiment_id,enc_key,secret,enc_table_name,input_path,outpu
     now = datetime.now()
     experiment_id = now.strftime("%Y-%m-%d-%H-%M-%S")
 
-    output_dir = PROJECT_DIR_PATH + "/results/" + "dur_" + str(duration) + "|expID_" + experiment_id
+    output_dir = PROJECT_DIR_PATH + "/results/" + "dur_" + str(duration) + "|rows_" + str(max_rows)+ "|expID_" + experiment_id
     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     db_port = DB_PORT
@@ -81,21 +81,23 @@ def runexp(duration,experiment_id,enc_key,secret,enc_table_name,input_path,outpu
                         "-p", str(db_port),\
                         "-n", enc_table_name,\
                         "-i", input_path,\
+                        "-m", str(max_rows),\
                         "-o", output_dir])
 
     # proc_list.append(encrypter_proc)
 
-    while(True):
-        pass
+    # while(True):
+    #     pass
 
-print("Please make sure the clean_exp.py is executed to remove the previous DB containers and volumes")
+#print("Please make sure the clean_exp.py is executed to remove the previous DB containers and volumes")
 
 # Variables per experiment:
-dur = 15 # duration in minutes
+dur = 15 # IMPORTANT PARAMETER: delta duration in minutes
 key = "tippersquest"
 secret = "questsecret"
 exp_id = "test"
-enc_t_name = "quest_" + str(dur)
+max_rows= 1000000
+enc_t_name = "quest_" + str(dur) + "_" + str(max_rows)
 in_path = "/home/guoxi/Workspace/wifi_data/original_csv_202_days"
 out_path = PROJECT_DIR_PATH + "/results"
-runexp(duration=dur,experiment_id=exp_id,enc_key=key,secret=secret,enc_table_name=enc_t_name,input_path=in_path,output_path=out_path)
+runexp(duration=dur,experiment_id=exp_id,enc_key=key,secret=secret,enc_table_name=enc_t_name,input_path=in_path,max_rows=max_rows,output_path=out_path)

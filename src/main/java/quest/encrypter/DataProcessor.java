@@ -8,6 +8,7 @@ import java.util.Random;
 import quest.model.EncWifiData;
 import quest.model.RawWifiData;
 import quest.util.AES;
+import quest.util.Epoch;
 
 public class DataProcessor {
     private String secretZStr;
@@ -18,8 +19,9 @@ public class DataProcessor {
     private Random randGenerator;
     private String fakeStringForEncCL;
     private DataIngestor dataIngestor;
+    private Epoch epoch;
 
-    public DataProcessor(String keyStr, String secretZStr, DataIngestor dataIngestor) {
+    public DataProcessor(String keyStr, String secretZStr, Epoch epoch, DataIngestor dataIngestor) {
         this.keyStr = keyStr;
         this.secretZStr = secretZStr;
         currBatchRawDataList = new ArrayList<RawWifiData>();
@@ -27,6 +29,7 @@ public class DataProcessor {
         randGenerator = new Random();
         fakeStringForEncCL = "dskfjlkajsdiofjioajsidofjolskdfjlk";
         this.dataIngestor = dataIngestor;
+        this.epoch = epoch;
     }
 
     public void addToCurrBatch(RawWifiData rData) {
@@ -46,7 +49,9 @@ public class DataProcessor {
         //debug
         RawWifiData firstData = rDataBatch.get(0);
         String batchStartTimeStr = firstData.time.toString();
-        System.out.println("Processing Batch: " + batchStartTimeStr);
+        String batchIdStr = epoch.getEpochIdStrByMs(firstData.time.getTime());
+        System.out.println("Processing Batch: " + batchIdStr);
+        System.out.println("--First data time: " + batchStartTimeStr);
         //...........
 
         ArrayList<EncWifiData> eDataBatch = new ArrayList<EncWifiData>();
@@ -66,8 +71,9 @@ public class DataProcessor {
         String encD = null;
 
         int rowCounter = 0;
-        long durationIdLong = rDataBatch.get(0).time.getTime();
-        String durationId = String.valueOf(durationIdLong);
+        long firstDataTimeMs = rDataBatch.get(0).time.getTime();
+        long epochId = epoch.getEpochIdByMs(firstDataTimeMs);
+        String epochIdStr = String.valueOf(epochId);
 
         // Line 2
         for (RawWifiData rData : currBatchRawDataList) {
@@ -106,7 +112,7 @@ public class DataProcessor {
             if (!hashSetId.contains(rData.clientId)){
                 hashSetId.add(rData.clientId);
                 encId = AES.concatAndEncrypt(rData.clientId,"1",secretZStr);
-                encU = AES.concatAndEncrypt("1",String.valueOf(rowCounter),durationId);
+                encU = AES.concatAndEncrypt("1",String.valueOf(rowCounter),epochIdStr);
                 HashSet<String> devVisitedLocSet = new HashSet<String>(); 
                 devVisitedLocSet.add(rData.apId);
                 devVisitedLocSetMap.put(rData.clientId, devVisitedLocSet);
@@ -116,7 +122,7 @@ public class DataProcessor {
                 //Line 7
                 if (!devVisitedLocSet.contains(rData.apId)){
                     encId = AES.concatAndEncrypt(rData.clientId,rStr,secretZStr);
-                    encU = AES.concatAndEncrypt("1",String.valueOf(rowCounter),durationId);
+                    encU = AES.concatAndEncrypt("1",String.valueOf(rowCounter),epochIdStr);
                     devVisitedLocSet.add(rData.apId);
                     devVisitedLocSetMap.replace(rData.clientId, devVisitedLocSet);
                 }
@@ -162,7 +168,7 @@ public class DataProcessor {
                 }
             }
 
-            encD = AES.encrypt(durationId);
+            encD = AES.encrypt(epochIdStr);
 
             //TODO: MAX Value
 
