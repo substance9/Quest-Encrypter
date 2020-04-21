@@ -110,7 +110,7 @@ public class DataProcessor {
             //Line 6-8, Encrypting device-ids (A_id) and Uniqueness of the device (A_u)
             //Line 6
             if (!hashSetId.contains(rData.clientId)){
-                hashSetId.add(rData.clientId);
+                // shouldn't add, because later will be used again for deciding hashSetId.add(rData.clientId);
                 encId = AES.concatAndEncrypt(rData.clientId,"1",secretZStr);
                 encU = AES.concatAndEncrypt("1",String.valueOf(rowCounter),epochIdStr);
                 HashSet<String> devVisitedLocSet = new HashSet<String>(); 
