@@ -75,20 +75,27 @@ public class AES {
         return null;
     }
 
-    public static String decrypt(String strToDecrypt, String secret)
+    public static String decrypt(String strToDecrypt)
     {
         try
         {
-            setKey();
+            byte[] ciphertext = Base64.getDecoder().decode(strToDecrypt);
+            ByteBuffer byteBuffer = ByteBuffer.wrap(ciphertext);
             byte[] iv = new byte[12];
+            byteBuffer.get(iv);
+            byte[] encrypted = new byte[byteBuffer.remaining()];
+            byteBuffer.get(encrypted);
+
+            setKey();
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             GCMParameterSpec parameterSpec = new GCMParameterSpec(128, iv); //128 bit auth tag length
-            cipher.init(Cipher.DECRYPT_MODE, secretKey);
-            return new String(cipher.doFinal(Base64.getDecoder().decode(strToDecrypt)));
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec);
+            return new String(cipher.doFinal(encrypted));
         }
         catch (Exception e)
         {
             System.out.println("Error while decrypting: " + e.toString());
+            e.printStackTrace();
         }
         return null;
     }
@@ -118,5 +125,9 @@ public class AES {
         System.out.println("encrypted: " + encrypt(locStr+"||"+Long.toString(epoch)+"||"+"1"));
 
         System.out.println("direct encrypted: " + encrypt("3082-clwa-2110||1547751088||28"));
+
+        String encStr = "AAAAAAAAAAAAAAAAfua1aqCvnr/X9QZdULeCsNrBXE8ZC7ZKOShbcqmHymUdANqoawG43+t0NKCjB7LaNeNmDnT1hEvR2XaRXxfo9A==";
+
+        System.out.println("decrypt: " + decrypt(encStr));
     }
 }

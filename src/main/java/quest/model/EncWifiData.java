@@ -7,6 +7,14 @@ public class EncWifiData {
     public String encCL;
     public String encD;
 
+    public EncWifiData(){
+        this.encId = null;
+        this.encU = null;
+        this.encL = null;
+        this.encCL = null;
+        this.encD = null;
+    }
+
     public EncWifiData(String encId, String encU, String encL, String encCL, String encD){
         this.encId = encId;
         this.encU = encU;
