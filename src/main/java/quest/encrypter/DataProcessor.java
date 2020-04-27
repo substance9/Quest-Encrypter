@@ -65,11 +65,14 @@ public class DataProcessor {
         }
 
         currBatchEncDataList = encryptBatch(currBatchRawDataList);
-        if (isEnableOpt1){
-            dataIngestor.ingestBatchToDB(currBatchEncDataList,encOpt1MetaData);
+        if (isEnableOpt1 && isEnableOpt2){
+            dataIngestor.ingestBatchToDB(currBatchEncDataList,encOpt1MetaData,encOpt2MetaDataList);
         }
         else if (isEnableOpt2){
             dataIngestor.ingestBatchToDB(currBatchEncDataList,encOpt2MetaDataList);
+        } 
+        else if (isEnableOpt1){
+            dataIngestor.ingestBatchToDB(currBatchEncDataList,encOpt1MetaData);
         } 
         else{
             dataIngestor.ingestBatchToDB(currBatchEncDataList);

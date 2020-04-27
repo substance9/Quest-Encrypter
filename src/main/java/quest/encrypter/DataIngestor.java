@@ -104,10 +104,28 @@ public class DataIngestor {
         }
     }
 
+    //Ingest function for all optimization method enabled
+    public void ingestBatchToDB(ArrayList<EncWifiData> currBatchEncDataList, EncOpt1MetaTableData encOpt1MetaData, ArrayList<EncOpt2MetaTableData> encOpt2MetaDataList){
+        ingestBatchToDB(currBatchEncDataList);
+        ingestOpt1MetaDataToDB(encOpt1MetaData);
+        ingestOpt2MetaDataToDB(encOpt2MetaDataList);
+    }
+
     //Ingest function for optimization method 1
     public void ingestBatchToDB(ArrayList<EncWifiData> currBatchEncDataList, EncOpt1MetaTableData encOpt1MetaData){
         ingestBatchToDB(currBatchEncDataList);
 
+        ingestOpt1MetaDataToDB(encOpt1MetaData);
+    }
+
+    //Ingest function for optimization method 2
+    public void ingestBatchToDB(ArrayList<EncWifiData> currBatchEncDataList, ArrayList<EncOpt2MetaTableData> encOpt2MetaDataList){
+        ingestBatchToDB(currBatchEncDataList);
+
+        ingestOpt2MetaDataToDB(encOpt2MetaDataList);
+    }
+
+    public void ingestOpt1MetaDataToDB(EncOpt1MetaTableData encOpt1MetaData){
         try{
             dataDbCon = dataDBConnectionPool.getConnection();
             dataDbCon.setAutoCommit(true);
@@ -133,10 +151,7 @@ public class DataIngestor {
         }
     }
 
-    //Ingest function for optimization method 2
-    public void ingestBatchToDB(ArrayList<EncWifiData> currBatchEncDataList, ArrayList<EncOpt2MetaTableData> encOpt2MetaDataList){
-        ingestBatchToDB(currBatchEncDataList);
-
+    public void ingestOpt2MetaDataToDB(ArrayList<EncOpt2MetaTableData> encOpt2MetaDataList){
         try{
             dataDbCon = dataDBConnectionPool.getConnection();
             dataDbCon.setAutoCommit(false);

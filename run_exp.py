@@ -7,7 +7,7 @@ from datetime import datetime
 from signal import signal, SIGINT
 from sys import exit
 
-PROJECT_DIR_PATH = "/home/ubuntu/Workspace/quest/encrypter"
+PROJECT_DIR_PATH = "/home/guoxi/Workspace/quest/encrypter"
 
 table_creation_sql_file_name = "table_creation.sql"
 table_drop_sql_file_name = "table_drop.sql"
@@ -115,6 +115,6 @@ max_rows= 10000000
 enc_t_name = "quest_" + str(dur) + "_" + str(max_rows)
 opt1_enabled = 1 # optimization 1: Per epoch max value counter. 0 for disable, 1 for enable
 opt2_enabled = 0 # optimization 2: Per epoch and per location max value counter. 0 for disable, 1 for enable
-in_path = "/home/ubuntu/Workspace/wifi_data/original_csv_202_days"
+in_path = "/home/guoxi/Workspace/wifi_data/original_csv_202_days"
 out_path = PROJECT_DIR_PATH + "/results"
 runexp(duration=dur,experiment_id=exp_id,enc_key=key,secret=secret,enc_table_name=enc_t_name,input_path=in_path,max_rows=max_rows,output_path=out_path,opt1_enabled=opt1_enabled,opt2_enabled=opt2_enabled)
