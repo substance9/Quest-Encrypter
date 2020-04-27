@@ -1,7 +1,7 @@
 #!/bin/bash
 
-echo "Creating Volume"
+echo "Stop Container"
 docker container stop quest_db
 
-echo "Starting Container"
+echo "Remove Vol"
 docker volume remove quest_db_vol
