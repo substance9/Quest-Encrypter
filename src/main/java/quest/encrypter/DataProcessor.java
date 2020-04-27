@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
 
+import quest.model.EncOpt1MetaTableData;
+import quest.model.EncOpt2MetaTableData;
 import quest.model.EncWifiData;
 import quest.model.RawWifiData;
 import quest.util.AES;
@@ -20,8 +22,13 @@ public class DataProcessor {
     private String fakeStringForEncCL;
     private DataIngestor dataIngestor;
     private Epoch epoch;
+    private boolean isEnableOpt1;
+    private boolean isEnableOpt2;
 
-    public DataProcessor(String keyStr, String secretZStr, Epoch epoch, DataIngestor dataIngestor) {
+    private EncOpt1MetaTableData encOpt1MetaData;
+    private ArrayList<EncOpt2MetaTableData> encOpt2MetaDataList;
+
+    public DataProcessor(String keyStr, String secretZStr, Epoch epoch, int enableOpt1, int enableOpt2, DataIngestor dataIngestor) {
         this.keyStr = keyStr;
         this.secretZStr = secretZStr;
         currBatchRawDataList = new ArrayList<RawWifiData>();
@@ -30,6 +37,19 @@ public class DataProcessor {
         fakeStringForEncCL = "dskfjlkajsdiofjioajsidofjolskdfjlk";
         this.dataIngestor = dataIngestor;
         this.epoch = epoch;
+
+        if (enableOpt1 == 0){
+            isEnableOpt1 = false;
+        }
+        else{
+            isEnableOpt1 = true;
+        }
+        if (enableOpt2 == 0){
+            isEnableOpt2 = false;
+        }
+        else{
+            isEnableOpt2 = true;
+        }
     }
 
     public void addToCurrBatch(RawWifiData rData) {
@@ -37,10 +57,24 @@ public class DataProcessor {
     }
 
     public void processCurrBatch() {
+        encOpt1MetaData = null;
+        encOpt2MetaDataList = null; 
+
+        if(isEnableOpt2){
+            encOpt2MetaDataList = new ArrayList<EncOpt2MetaTableData>();
+        }
+
         currBatchEncDataList = encryptBatch(currBatchRawDataList);
-
-        dataIngestor.ingestBatchToDB(currBatchEncDataList);
-
+        if (isEnableOpt1){
+            dataIngestor.ingestBatchToDB(currBatchEncDataList,encOpt1MetaData);
+        }
+        else if (isEnableOpt2){
+            dataIngestor.ingestBatchToDB(currBatchEncDataList,encOpt2MetaDataList);
+        } 
+        else{
+            dataIngestor.ingestBatchToDB(currBatchEncDataList);
+        }
+        
         currBatchRawDataList = new ArrayList<RawWifiData>();
         currBatchEncDataList = new ArrayList<EncWifiData>();
     }
@@ -60,6 +94,9 @@ public class DataProcessor {
         HashSet<String> hashSetId = new HashSet<String>();
         HashSet<String> hashSetLoc = new HashSet<String>();
 
+        //for optimization method 2 
+        HashMap<String, HashSet<String>> locVisitersSetMap = new HashMap<String, HashSet<String>>();
+
         HashMap<String, Integer> locVisitedCounterMap = new HashMap<String, Integer>();
 
         HashMap<String, String> devAllVisitedLocStrMap = new HashMap<String, String>();
@@ -75,6 +112,7 @@ public class DataProcessor {
         long epochId = epoch.getEpochIdByMs(firstDataTimeMs);
         String epochIdStr = String.valueOf(epochId);
 
+        // First round of iteration
         // Line 2
         for (RawWifiData rData : currBatchRawDataList) {
             if (!devVisitedLocSetMap.containsKey(rData.clientId)) {
@@ -90,6 +128,23 @@ public class DataProcessor {
                     continue;
                 }
             }
+
+            if(isEnableOpt2){
+                //get data for optimization method 2
+                if (!locVisitersSetMap.containsKey(rData.apId)) {
+                    HashSet<String> locVisitersSet = new HashSet<String>();
+                    locVisitersSet.add(rData.clientId);
+                    locVisitersSetMap.put(rData.apId, locVisitersSet);
+                } else {
+                    HashSet<String> locVisitersSet = locVisitersSetMap.get(rData.apId);
+                    if (!locVisitersSet.contains(rData.clientId)) {
+                        locVisitersSet.add(rData.clientId);
+                        locVisitersSetMap.replace(rData.apId, locVisitersSet);
+                    } else {
+                        continue;
+                    }
+                }
+            }
         }
 
         for (String clientId : devVisitedLocSetMap.keySet()) {
@@ -102,6 +157,7 @@ public class DataProcessor {
 
         devVisitedLocSetMap = new HashMap<String, HashSet<String>>();
 
+        // Second round of iteration
         //Line 4
         for (RawWifiData rData:currBatchRawDataList){
             rowCounter = rowCounter + 1;
@@ -170,10 +226,24 @@ public class DataProcessor {
 
             encD = AES.encrypt(epochIdStr);
 
-            //TODO: MAX Value
-
             EncWifiData eData = new EncWifiData(encId, encU, encL, encCL, encD);
             eDataBatch.add(eData);
+        }
+
+        if (isEnableOpt1){
+            String opt1EncCount = AES.encrypt(String.valueOf(rowCounter));
+            encOpt1MetaData = new EncOpt1MetaTableData(encD, opt1EncCount);
+        }
+        if (isEnableOpt2){
+            for (String apId : locVisitersSetMap.keySet()) {
+                HashSet<String> visitorsSet = devVisitedLocSetMap.get(apId);
+                int n = visitorsSet.size(); 
+                String opt2EncCount = AES.encrypt(String.valueOf(n));
+                String opt2EncLoc = AES.encrypt(apId);
+                EncOpt2MetaTableData opt2MetaData = new EncOpt2MetaTableData(encD,opt2EncLoc,opt2EncCount );
+                
+                encOpt2MetaDataList.add(opt2MetaData);
+            }
         }
 
         return eDataBatch;

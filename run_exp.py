@@ -24,11 +24,24 @@ CREATE TABLE %s (
   ENCCL TEXT NOT NULL,
   ENCD TEXT NOT NULL
 );
+
+CREATE TABLE %s_meta_opt1 (
+  ENCD TEXT NOT NULL,
+  ENCCOUNT TEXT NOT NULL
+);
+
+CREATE TABLE %s_meta_opt2 (
+  ENCD TEXT NOT NULL,
+  ENCL TEXT NOT NULL,
+  ENCCOUNT TEXT NOT NULL
+);
 """
 
 enc_table_drop_sql_template = \
 """
 DROP TABLE IF EXISTS %s;
+DROP TABLE IF EXISTS %s_meta_opt1;
+DROP TABLE IF EXISTS %s_meta_opt2;
 """
 
 # def exit_handler(signal_received, frame):
@@ -53,12 +66,12 @@ def init_db(project_run_id):
     os.chdir(PROJECT_DIR_PATH + "/util")
     #Generate table creation SQL file for init db
     with open(table_creation_sql_file_name, "w") as table_creation_sql_file, open(table_drop_sql_file_name, "w") as table_drop_sql_file:
-        table_creation_sql_file.write(enc_table_creation_sql_template % project_run_id)
-        table_drop_sql_file.write(enc_table_drop_sql_template % project_run_id)
+        table_creation_sql_file.write(enc_table_creation_sql_template % (project_run_id,project_run_id,project_run_id))
+        table_drop_sql_file.write(enc_table_drop_sql_template % (project_run_id,project_run_id,project_run_id))
     print("Initiate DB for Quest Encrypter ")
     call_cmd(["./init_quest_postgres.sh",str(DB_PORT)])
 
-def runexp(duration,experiment_id,enc_key,secret,enc_table_name,input_path,max_rows,output_path):
+def runexp(duration,experiment_id,enc_key,secret,enc_table_name,input_path,max_rows,output_path,opt1_enabled,opt2_enabled):
     #project_run_id = PROJECT_NAME_BASE + str(duration) + "_" + str(max_rows)
     init_db(enc_table_name)
 
@@ -73,7 +86,7 @@ def runexp(duration,experiment_id,enc_key,secret,enc_table_name,input_path,max_r
     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     db_port = DB_PORT
-    call_cmd(["java", "-jar" ,"-Xmx32g", "build/libs/encrypter-all-0.1.jar", \
+    call_cmd(["java", "-jar" ,"-Xmx64g", "build/libs/encrypter-all-0.1.jar", \
                         "-d", str(duration),\
                         "-x", experiment_id,\
                         "-k", enc_key,\
@@ -82,7 +95,9 @@ def runexp(duration,experiment_id,enc_key,secret,enc_table_name,input_path,max_r
                         "-n", enc_table_name,\
                         "-i", input_path,\
                         "-m", str(max_rows),\
-                        "-o", output_dir])
+                        "-o", output_dir,
+                        "-a", str(opt1_enabled),
+                        "-b", str(opt2_enabled)])
 
     # proc_list.append(encrypter_proc)
 
@@ -96,8 +111,10 @@ dur = 15 # IMPORTANT PARAMETER: delta duration in minutes
 key = "tippersquest"
 secret = "questsecret"
 exp_id = "test"
-max_rows= 1000000
+max_rows= 10000000
 enc_t_name = "quest_" + str(dur) + "_" + str(max_rows)
+opt1_enabled = 1 # optimization 1: Per epoch max value counter. 0 for disable, 1 for enable
+opt2_enabled = 0 # optimization 2: Per epoch and per location max value counter. 0 for disable, 1 for enable
 in_path = "/home/guoxi/Workspace/wifi_data/original_csv_202_days"
 out_path = PROJECT_DIR_PATH + "/results"
-runexp(duration=dur,experiment_id=exp_id,enc_key=key,secret=secret,enc_table_name=enc_t_name,input_path=in_path,max_rows=max_rows,output_path=out_path)
+runexp(duration=dur,experiment_id=exp_id,enc_key=key,secret=secret,enc_table_name=enc_t_name,input_path=in_path,max_rows=max_rows,output_path=out_path,opt1_enabled=opt1_enabled,opt2_enabled=opt2_enabled)

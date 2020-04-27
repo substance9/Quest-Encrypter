@@ -25,6 +25,8 @@ public class Encrypter {
         DataProcessor dataProcessor = new DataProcessor(prop.getProperty("enc_key"),
                                                         prop.getProperty("secret"),
                                                         epoch,
+                                                        Integer.valueOf(prop.getProperty("first_opt")),
+                                                        Integer.valueOf(prop.getProperty("second_opt")),
                                                         dataIngestor);
 
         DataReader dataReader = new DataReader(prop.getProperty("input_path"),
@@ -55,6 +57,8 @@ public class Encrypter {
         parser.addArgument("-i", "--input_path").required(true).help("Data input path");
         parser.addArgument("-m", "--max_rows").required(true).help("Max rows read from data file and inserted into DB");
         parser.addArgument("-o", "--output_path").required(true).help("Result(log) output path");
+        parser.addArgument("-a", "--first_opt").required(true).help("Option of using optimization 1. 0 for disable,1 for enable");
+        parser.addArgument("-b", "--second_opt").required(true).help("Option of using optimization 2. 0 for disable,1 for enable");
 		Namespace ns = null;
 
 		try {
@@ -75,6 +79,8 @@ public class Encrypter {
             prop.setProperty("max_rows", ns.get("max_rows"));
             prop.setProperty("result.enc_table_name", ns.get("enc_table_name"));
             prop.setProperty("result.output_path", ns.get("output_path"));
+            prop.setProperty("first_opt", ns.get("first_opt"));
+            prop.setProperty("second_opt", ns.get("second_opt"));
         }
             
         String resultDir = prop.getProperty("result.output_path")
@@ -93,6 +99,8 @@ public class Encrypter {
             System.out.println("--db_port:\t\t\t"+prop.getProperty("db_port"));
             System.out.println("--input_path:\t"+prop.getProperty("input_path"));
             System.out.println("--max_rows:\t"+prop.getProperty("max_rows"));
+            System.out.println("--first_opt:\t"+prop.getProperty("first_opt"));
+            System.out.println("--second_opt:\t"+prop.getProperty("second_opt"));
 
         return prop;
     }
