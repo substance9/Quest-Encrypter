@@ -112,10 +112,12 @@ public class DataReader {
   
                         dataProcessor.addToCurrBatch(rData);
 
-                        if (rowCounter >= maxRows){
-                            System.out.println("Read MAX number of lines: " + String.valueOf(maxRows) + ", Finishing");
-                            finishFlag = true;
-                            break;
+                        if(maxRows!=0){
+                            if (rowCounter >= maxRows){
+                                System.out.println("Read MAX number of lines: " + String.valueOf(maxRows) + ", Finishing");
+                                finishFlag = true;
+                                break;
+                            }
                         }
                     }
                     if (finishFlag){
