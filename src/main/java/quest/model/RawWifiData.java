@@ -13,9 +13,13 @@ public class RawWifiData {
         clientId = clientIdStr;
     }
 
-    // public long getSize(){
-    //     return (8 + apId.length());
-    // }
+    public int getSize(){
+        return (8 + getStrSize(apId) + getStrSize(clientId));
+    }
+
+    public int getStrSize(String str){
+        return (8 * (int) ((((str.length()) * 2) + 45) / 8)) - 8;
+    }
 
     @Override
     public String toString()

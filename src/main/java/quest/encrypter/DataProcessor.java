@@ -24,6 +24,13 @@ public class DataProcessor {
     private Epoch epoch;
     private boolean isEnableOpt1;
     private boolean isEnableOpt2;
+    private boolean isCalcuMemUsage;
+
+    private long avgRawDataSizeInEpoch;
+    private long avgMetaDataSizeInEpoch;
+    private long totalRawDataSizeInEpoch;
+    private long totalMetaDataSizeInEpoch;
+    private int numOfEpochs;
 
     private EncOpt1MetaTableData encOpt1MetaData;
     private ArrayList<EncOpt2MetaTableData> encOpt2MetaDataList;
@@ -50,6 +57,12 @@ public class DataProcessor {
         else{
             isEnableOpt2 = true;
         }
+        isCalcuMemUsage = false;
+        avgRawDataSizeInEpoch = 0;
+        avgMetaDataSizeInEpoch = 0;
+        totalRawDataSizeInEpoch = 0;
+        totalMetaDataSizeInEpoch = 0;
+        numOfEpochs = 0;
     }
 
     public void addToCurrBatch(RawWifiData rData) {
@@ -76,6 +89,17 @@ public class DataProcessor {
         } 
         else{
             dataIngestor.ingestBatchToDB(currBatchEncDataList);
+        }
+
+        numOfEpochs ++;
+
+        //meta data mem usage calc
+        if(isCalcuMemUsage){
+            System.out.println("Processed " + String.valueOf(numOfEpochs) + " Epochs");
+            avgRawDataSizeInEpoch = totalRawDataSizeInEpoch / Long.valueOf(numOfEpochs);
+            System.out.println("Avg. Raw Data Size " + String.valueOf(avgRawDataSizeInEpoch) + " bytes");
+            avgMetaDataSizeInEpoch = totalMetaDataSizeInEpoch / Long.valueOf(numOfEpochs);
+            System.out.println("Avg. Meta Data Size " + String.valueOf(avgMetaDataSizeInEpoch) + " bytes");
         }
         
         currBatchRawDataList = new ArrayList<RawWifiData>();
@@ -115,6 +139,9 @@ public class DataProcessor {
         long epochId = epoch.getEpochIdByMs(firstDataTimeMs);
         String epochIdStr = String.valueOf(epochId);
 
+        int rawDataSizeInEpoch = 0;
+        int metaDataSizeInEpoch = 0;
+
         // First round of iteration
         // Line 2
         for (RawWifiData rData : currBatchRawDataList) {
@@ -147,6 +174,12 @@ public class DataProcessor {
                         continue;
                     }
                 }
+            }
+
+            if(isCalcuMemUsage){
+
+                //keep track of raw data mem usage
+                rawDataSizeInEpoch = rawDataSizeInEpoch + rData.getSize();
             }
         }
 
@@ -233,9 +266,36 @@ public class DataProcessor {
             eDataBatch.add(eData);
         }
 
-        //calculate meta data memory usage
-        
+        if(isCalcuMemUsage){
 
+        //calculate all raw data mem usage
+            totalRawDataSizeInEpoch = totalRawDataSizeInEpoch + Long.valueOf(rawDataSizeInEpoch);
+
+        //calculate meta data memory usage
+            
+            //HashMap<String, HashSet<String>> devVisitedLocSetMap
+            for (String clientId : devVisitedLocSetMap.keySet()) {
+                HashSet<String> locSet = devVisitedLocSetMap.get(clientId);
+                int locSetSize = locSet.size() * 32; 
+                metaDataSizeInEpoch = metaDataSizeInEpoch + locSetSize;
+            }
+            int devVisitedLocSetMapSize = devVisitedLocSetMap.size() * 32  ;
+            metaDataSizeInEpoch = metaDataSizeInEpoch + devVisitedLocSetMapSize;
+            //HashSet<String> hashSetId
+            int hashSetIdSize = hashSetId.size()*32;
+            metaDataSizeInEpoch = metaDataSizeInEpoch + hashSetIdSize;
+            //HashSet<String> hashSetLoc
+            int hashSetLocSize = hashSetLoc.size()*32;
+            metaDataSizeInEpoch = metaDataSizeInEpoch + hashSetLocSize;
+            //HashMap<String, Integer> locVisitedCounterMap
+            int locVisitedCounterMapSize = locVisitedCounterMap.size()*32;
+            metaDataSizeInEpoch = metaDataSizeInEpoch + locVisitedCounterMapSize;
+            //HashMap<String, String> devAllVisitedLocStrMap
+            int devAllVisitedLocStrMapSize = devAllVisitedLocStrMap.size()*32;
+            metaDataSizeInEpoch = metaDataSizeInEpoch + devAllVisitedLocStrMapSize;
+
+            totalMetaDataSizeInEpoch = totalMetaDataSizeInEpoch + Long.valueOf(metaDataSizeInEpoch);
+        }
 
 
         if (isEnableOpt1){

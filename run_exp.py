@@ -107,7 +107,7 @@ def runexp(duration,experiment_id,enc_key,secret,enc_table_name,input_path,max_r
 #print("Please make sure the clean_exp.py is executed to remove the previous DB containers and volumes")
 
 # Variables per experiment:
-dur = 15 # IMPORTANT PARAMETER: delta duration in minutes
+dur = 60 # IMPORTANT PARAMETER: delta duration in minutes
 key = "tippersquest"
 secret = "questsecret"
 exp_id = "test"
