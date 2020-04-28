@@ -239,7 +239,7 @@ public class DataProcessor {
         }
         if (isEnableOpt2){
             for (String apId : locVisitersSetMap.keySet()) {
-                HashSet<String> visitorsSet = devVisitedLocSetMap.get(apId);
+                HashSet<String> visitorsSet = locVisitersSetMap.get(apId);
                 int n = visitorsSet.size(); 
                 String opt2EncCount = AES.encrypt(String.valueOf(n));
                 String opt2EncLoc = AES.encrypt(apId);
