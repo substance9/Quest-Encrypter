@@ -13,6 +13,10 @@ public class RawWifiData {
         clientId = clientIdStr;
     }
 
+    // public long getSize(){
+    //     return (8 + apId.length());
+    // }
+
     @Override
     public String toString()
     {

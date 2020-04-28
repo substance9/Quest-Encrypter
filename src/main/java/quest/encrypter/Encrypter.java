@@ -6,6 +6,8 @@ import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Properties;
 
 import quest.util.*;
@@ -34,13 +36,20 @@ public class Encrypter {
                                             Integer.parseInt(prop.getProperty("epoch")),
                                             epoch,
                                             dataProcessor);
+
+        Instant start = Instant.now();
         try{
             dataReader.run();
         } catch (IOException ex) {
             ex.printStackTrace();
         }
 
+        Instant insertionFinish = Instant.now();
+
         System.out.println("Quest Batch Encryption Ends");
+
+        long insertionTime = Duration.between(start, insertionFinish).toMillis();
+        System.out.println("Total Insertion Time: " + String.valueOf(insertionTime) + " ms");
     }
 
     private static Properties readConfig( String[] args ){

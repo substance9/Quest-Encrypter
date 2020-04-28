@@ -233,6 +233,11 @@ public class DataProcessor {
             eDataBatch.add(eData);
         }
 
+        //calculate meta data memory usage
+        
+
+
+
         if (isEnableOpt1){
             String opt1EncCount = AES.encrypt(String.valueOf(rowCounter));
             encOpt1MetaData = new EncOpt1MetaTableData(encD, opt1EncCount);
